@@ -25,7 +25,7 @@ def bearer_oauth(request):
     return request
 
 
-def connect_to_endpoint(url):
+def get_response(url):
     response = requests.request("GET", url, auth=bearer_oauth)
     if response.status_code != 200:
         raise Exception(
@@ -38,7 +38,7 @@ def connect_to_endpoint(url):
 
 def main():
     url = create_url()
-    json_response = connect_to_endpoint(url)
+    json_response = get_response(url)
     print(json.dumps(json_response, indent=4, sort_keys=True))
 
 
