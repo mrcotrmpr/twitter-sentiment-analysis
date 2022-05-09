@@ -6,14 +6,16 @@ bearer_token = os.getenv("BEARER_TOKEN")
 
 
 def create_url():
-    # Adjustable fields which will be retrieved such as created_at and language
+    # Adjustable fields which will be returned such as created_at and language
     tweet_fields = "tweet.fields=created_at,lang"
 
-    # You can adjust ids to include a single Tweets.
-    # Or you can add to up to 100 comma-separated ID's
-    ids = "ids=1278747501642657792,1255542774432063488"
+    # Create a query which can for example check for keywords or/and a specified language
+    query = "query=(@RockstarGames OR Rockstar Games)(lang:en)"
 
-    url = "https://api.twitter.com/2/tweets?{}&{}".format(ids, tweet_fields)
+    # Set max results
+    max_results = "max_results=10"
+
+    url = "https://api.twitter.com/2/tweets/search/recent?{}&{}&{}".format(tweet_fields, query, max_results)
     return url
 
 
