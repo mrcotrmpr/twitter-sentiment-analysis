@@ -1,6 +1,6 @@
 import os
 import requests
-from nltk.sentiment import SentimentIntensityAnalyzer
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 bearer_token = os.getenv("BEARER_TOKEN")
 
@@ -37,10 +37,17 @@ def get_response(url) -> dict:
 
 
 def do_analysis(response):
-    sia = SentimentIntensityAnalyzer()
+    analyzer = SentimentIntensityAnalyzer()
 
-    pos = [item["text"] for item in response if sia.polarity_scores(item["text"])['pos'] > 0.5]
-    neg = [item["text"] for item in response if sia.polarity_scores(item["text"])['neg'] > 0.5]
+    pos = []
+    neg = []
+
+    for item in response:
+        res = analyzer.polarity_scores(item["text"])
+        if res["neg"] > 0.5 and res["neg"] > res["pos"]:
+            neg.append({"text": item["text"], "score": res["neg"]})
+        elif res["pos"] > 0.5:
+            pos.append({"text": item["text"], "score": res["pos"]})
 
     return pos, neg
 
