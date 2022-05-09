@@ -1,6 +1,8 @@
+import json
 import os
 import requests
-from nltk.sentiment import SentimentIntensityAnalyzer
+from flair.data import Sentence
+from flair.models import TextClassifier
 
 bearer_token = os.getenv("BEARER_TOKEN")
 
@@ -37,10 +39,19 @@ def get_response(url) -> dict:
 
 
 def do_analysis(response):
-    sia = SentimentIntensityAnalyzer()
+    pos = []
+    neg = []
 
-    pos = [item["text"] for item in response if sia.polarity_scores(item["text"])['pos'] > 0.5]
-    neg = [item["text"] for item in response if sia.polarity_scores(item["text"])['neg'] > 0.5]
+    classifier = TextClassifier.load("en-sentiment")
+
+    for item in response:
+        sentence = Sentence(item["text"])
+        classifier.predict(sentence)
+
+        if sentence.to_dict()["all labels"][0]["value"] == "NEGATIVE" and sentence.to_dict()["all labels"][0]["confidence"] > 0.6:
+            neg.append({"text": str(sentence)})
+        elif sentence.to_dict()["all labels"][0]["value"] == "POSITIVE" and sentence.to_dict()["all labels"][0]["confidence"] > 0.6:
+            pos.append({"text": str(sentence)})
 
     return pos, neg
 
@@ -51,8 +62,8 @@ def main():
 
     pos, neg = do_analysis(response)
 
-    print(f"Positive tweets: \n{pos}\n")
-    print(f"Negative tweets: \n{neg}")
+    print(f"Positive: \n{pos}\n")
+    print(f"Negative: \n{neg}")
 
 
 if __name__ == "__main__":
