@@ -34,7 +34,7 @@ def calc_scores(response):
         afinn = json.load(f)
 
     for item in response:
-        res = {"text": item["text"], "words": [], "score": 0}
+        res = {"text": item["text"], "negative_words": [], "positive_words": [], "score": 0}
         tokenized = tokenize(item["text"])
 
         for token in tokenized:
@@ -42,11 +42,11 @@ def calc_scores(response):
             if token in afinn:
                 # Negative hit
                 if afinn[token] < 0:
-                    res["words"].append(token)
+                    res["negative_words"].append(token)
                     res["score"] += afinn[token]
                 # Positive hit
                 elif afinn[token] > 0:
-                    res["words"].append(token)
+                    res["positive_words"].append(token)
                     res["score"] += afinn[token]
 
         if res["score"] > 0:
@@ -61,7 +61,13 @@ def do_analysis(scores):
     pos, neg = calc_scores(scores)
 
     print(f"\nPositive scores ({len(pos)}):\n{pos}\n")
-    print(f"\nNegative scores ({len(neg)}):\n{neg}")
+    print(f"\nNegative scores ({len(neg)}):\n{neg}\n")
+
+    most_positive = max(pos, key=lambda i: i["score"])
+    most_negative = min(neg, key=lambda i: i["score"])
+
+    print(f"Highest score: {most_positive}\n")
+    print(f"Lowest score: {most_negative}\n")
 
 
 def main():
