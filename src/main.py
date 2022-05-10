@@ -50,9 +50,9 @@ def calc_scores(response):
                     res["score"] += afinn[token]
 
         if res["score"] > 0:
-            pos.append(dict)
+            pos.append(res)
         elif res["score"] < 0:
-            neg.append(dict)
+            neg.append(res)
 
     return pos, neg
 
@@ -60,8 +60,8 @@ def calc_scores(response):
 def do_analysis(scores):
     pos, neg = calc_scores(scores)
 
-    print(f"\nPositive scores:\n{pos}\n")
-    print(f"\nNegative scores:\n{neg}")
+    print(f"\nPositive scores ({len(pos)}):\n{pos}\n")
+    print(f"\nNegative scores ({len(neg)}):\n{neg}")
 
 
 def main():
