@@ -1,65 +1,55 @@
-import os
-import requests
-from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
-
-bearer_token = os.getenv("BEARER_TOKEN")
-
-
-def create_url() -> str:
-    # Adjustable fields which will be returned such as created_at and language
-    tweet_fields = "tweet.fields=created_at,lang"
-
-    # Create a query which can for example check for keywords or/and a specified language
-    query = "query=(@RockstarGames)(lang:en)"
-
-    # Set max results between 10 and 100
-    max_results = "max_results=100"
-
-    url = "https://api.twitter.com/2/tweets/search/recent?{}&{}&{}".format(tweet_fields, query, max_results)
-    return url
+import json
+import re
+import string
+from twitter_connector import get_tweets
 
 
-def bearer_oauth(request) -> dict:
-    request.headers["Authorization"] = f"Bearer {bearer_token}"
-    request.headers["User-Agent"] = "v2TweetLookupPython"
-    return request
+def de_emojify(sentence):
+    # Remove emojis from the input string using regex
+    regrex_pattern = re.compile(pattern="["
+                                        u"\U0001F600-\U0001F64F"  # emoticons
+                                        u"\U0001F300-\U0001F5FF"  # symbols & pictographs
+                                        u"\U0001F680-\U0001F6FF"  # transport & map symbols
+                                        u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
+                                        "]+", flags=re.UNICODE)
+    return regrex_pattern.sub(r'', sentence)
 
 
-def get_response(url) -> dict:
-    response = requests.request("GET", url, auth=bearer_oauth)
-    if response.status_code != 200:
-        raise Exception(
-            "Request returned an error: {} {}".format(
-                response.status_code, response.text
-            )
-        )
-    return response.json()
+def tokenize(sentence) -> list:
+    # Tokenize the input string
+    return de_emojify(sentence) \
+        .lower() \
+        .strip() \
+        .replace("\n", " ") \
+        .translate(str.maketrans(" ", " ", string.punctuation)) \
+        .split(" ")
 
 
-def do_analysis(response):
-    analyzer = SentimentIntensityAnalyzer()
+def calc_scores(response):
+    pos, neg = [], []
 
-    pos = []
-    neg = []
+    # The afinn wordlist contains words with a score from -5 to 5 based on sentiment
+    json_path = 'data/afinn.json'
+    with open(json_path) as f:
+        afinn = json.load(f)
 
     for item in response:
-        res = analyzer.polarity_scores(item["text"])
-        if res["neg"] > 0.5 and res["neg"] > res["pos"]:
-            neg.append({"text": item["text"], "score": res["neg"]})
-        elif res["pos"] > 0.5:
-            pos.append({"text": item["text"], "score": res["pos"]})
+        tokenized = tokenize(item["text"])
+        print(tokenized)
 
     return pos, neg
 
 
+def do_analysis(scores):
+    pos, neg = calc_scores(scores)
+
+    print(f"\nPositive scores:\n{pos}\n")
+    print(f"\nNegative scores:\n{neg}")
+
+
 def main():
-    url = create_url()
-    response = get_response(url)["data"]
-
-    pos, neg = do_analysis(response)
-
-    print(f"Positive tweets: \n{pos}\n")
-    print(f"Negative tweets: \n{neg}")
+    response = get_tweets()
+    do_analysis(response)
 
 
 if __name__ == "__main__":
