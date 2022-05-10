@@ -34,25 +34,25 @@ def calc_scores(response):
         afinn = json.load(f)
 
     for item in response:
+        res = {"text": item["text"], "words": [], "score": 0}
         tokenized = tokenize(item["text"])
 
         for token in tokenized:
-            dict = {"text": item["text"], "words": [], "score": 0}
             # If there is a match in the afinn wordlist
             if token in afinn:
                 # Negative hit
                 if afinn[token] < 0:
-                        dict["words"] = [token]
-                        dict["score"] = afinn[token]
+                    res["words"].append(token)
+                    res["score"] += afinn[token]
                 # Positive hit
                 elif afinn[token] > 0:
-                        dict["words"] = [token]
-                        dict["score"] = afinn[token]
+                    res["words"].append(token)
+                    res["score"] += afinn[token]
 
-            if dict["score"] > 0:
-                pos.append(dict)
-            elif dict["score"] < 0:
-                neg.append(dict)
+        if res["score"] > 0:
+            pos.append(dict)
+        elif res["score"] < 0:
+            neg.append(dict)
 
     return pos, neg
 
