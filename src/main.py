@@ -35,7 +35,34 @@ def calc_scores(response):
 
     for item in response:
         tokenized = tokenize(item["text"])
-        print(tokenized)
+
+        for token in tokenized:
+            dict = {"text": "", "words":[], "score": 0}
+            # If there is a match in the afinn wordlist
+            if token in afinn:
+                # Negative hit
+                if afinn[token] < 0:
+                    if len(list(filter(lambda res: res['text'] == item["text"], neg))) > 0:
+                        dict["words"].append(token)
+                        dict["score"] += afinn[token]
+                    else:
+                        dict["text"] = item["text"]
+                        dict["words"] = [token]
+                        dict["score"] = afinn[token]
+                # Positive hit
+                elif afinn[token] > 0:
+                    if len(list(filter(lambda res: res['text'] == item["text"], pos))) > 0:
+                        dict["words"].append(token)
+                        dict["score"] += afinn[token]
+                    else:
+                        dict["text"] = item["text"]
+                        dict["words"] = [token]
+                        dict["score"] = afinn[token]
+
+            if dict["score"] > 0:
+                pos.append(dict)
+            elif dict["score"] < 0:
+                neg.append(dict)
 
     return pos, neg
 
@@ -48,8 +75,8 @@ def do_analysis(scores):
 
 
 def main():
-    response = get_tweets()
-    do_analysis(response)
+    tweets = get_tweets()
+    do_analysis(tweets)
 
 
 if __name__ == "__main__":
