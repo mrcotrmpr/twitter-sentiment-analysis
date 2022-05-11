@@ -60,13 +60,15 @@ def calc_scores(response):
 def do_analysis(scores):
     pos, neg = calc_scores(scores)
 
-    print(f"\nPositive scores ({len(pos)}):\n{pos}\n")
-    print(f"\nNegative scores ({len(neg)}):\n{neg}\n")
+    print(f"\nPositive scores ({len(pos)}):\n")
+    print(json.dumps(pos, indent=4, sort_keys=True))
+    print(f"\nNegative scores ({len(neg)}):\n")
+    print(json.dumps(neg, indent=4, sort_keys=True))
 
     most_positive = max(pos, key=lambda i: i["score"])
     most_negative = min(neg, key=lambda i: i["score"])
 
-    print(f"Highest score: {most_positive}\n")
+    print(f"\nHighest score: {most_positive}\n")
     print(f"Lowest score: {most_negative}\n")
 
 
